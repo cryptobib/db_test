@@ -8,7 +8,17 @@
 
 ### Requirements
 
-See `README.md` from the main project.
+- see `README.md` from the main project
+- compile bibtex8:
+
+		cd bibtex8
+		make -f unix.mak linux-gcc
+
+- scons (can be installed via `pip install --egg scons`)
+- compile pplatex
+
+		cd pplatex
+		scons
 
 ### Run all tests
 
