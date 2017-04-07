@@ -3,3 +3,7 @@
 *.blg
 *.log
 *.pdf
+*.bcf
+*.run.xml
+*_biber.tex
+*_bibtex.tex
