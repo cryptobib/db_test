@@ -16,7 +16,7 @@ all: $(TEX_TESTS) $(PDF_TESTS)
 	@echo "--- Test of $<"
 	rm -f $(patsubst %.tex,%.aux,$<)
 	$(PDFLATEX) $<
-	$(BIBER) $(basename $<) 2>&1 | sed -e '/WARN - month field/d' | sed -e '/cannot be null, deleting it/d' |  sed -e '/line 279/d' # remove the issues with the months and the empty fields
+	$(BIBER) $(basename $<) 2>&1 | sed -e '/WARN - month field/d' | sed -e '/cannot be null, deleting it/d' |  sed -e '/line 279/d' # remove the issues with the months and the empty fields + workaround for issue https://github.com/plk/biber/issues/174
 
 %_bibtex.pdf: %_bibtex.tex clean FORCE
 	@echo
