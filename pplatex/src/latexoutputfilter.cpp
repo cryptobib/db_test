@@ -35,7 +35,10 @@ using namespace std;
 
 #define KILE_DEBUG() cerr
 
-static bool file_exists(const string &name) 
+// Maximum length of a latex log line.
+#define MAX_LATEX_LINE_LENGTH  79
+
+static bool file_exists(const string &name)
 {
     struct stat info;
     int ret = stat(name.c_str(), &info);
@@ -86,11 +89,12 @@ static bool endsWith(const string &str, char c) {
 
 ////// Class Code //////
 
-LatexOutputFilter::LatexOutputFilter(const string& source, const string& logfile, int verbose, bool quiet) :
+LatexOutputFilter::LatexOutputFilter(const string& source, const string& logfile, int verbose, bool nobadboxes, bool quiet) :
     OutputFilter(source, logfile, verbose),
     m_nErrors(0),
     m_nWarnings(0),
     m_nBadBoxes(0),
+    m_nobadboxes(nobadboxes),
     m_quiet(quiet)
 {
 }
@@ -140,18 +144,25 @@ bool LatexOutputFilter::fileExists(const string & name)
     return false;
 }
 
+bool LatexOutputFilter::needsSpace()
+{
+    // Heuristic: If the last line was as long as possible, we assume latex did
+    // wrap around inside a word.
+    return m_nLastLineLength < MAX_LATEX_LINE_LENGTH;
+}
+
 // There are basically two ways to detect the current file TeX is processing:
 //	1) Use \Input (i.c.w. srctex.sty or srcltx.sty) and \include exclusively. This will
-//	cause (La)TeX to print the line ":<+ filename"  in the log file when opening a file, 
+//	cause (La)TeX to print the line ":<+ filename"  in the log file when opening a file,
 //	":<-" when closing a file. Filenames pushed on the stack in this mode are marked
 //	as reliable.
 //
 //	2) Since people will probably also use the \input command, we also have to be
 //	to detect the old-fashioned way. TeX prints '(filename' when opening a file and a ')'
 //	when closing one. It is impossible to detect this with 100% certainty (TeX prints many messages
-//	and even text (a context) from the TeX source file, there could be unbalanced parentheses), 
-//	so we use a heuristic algorithm. In heuristic mode a ')' will only be considered as a signal that 
-//	TeX is closing a file if the top of the stack is not marked as "reliable". 
+//	and even text (a context) from the TeX source file, there could be unbalanced parentheses),
+//	so we use a heuristic algorithm. In heuristic mode a ')' will only be considered as a signal that
+//	TeX is closing a file if the top of the stack is not marked as "reliable".
 //	Also, when scanning for a TeX error linenumber (which sometimes causes a context to be printed
 //	to the log-file), updateFileStack is not called, helping not to pick up unbalanced parentheses
 //	from the context.
@@ -260,13 +271,13 @@ void LatexOutputFilter::updateFileStackHeuristic(const string &strLine, short & 
 		    // TODO check if we are surrounded by " " (i.e. "c:\Documents and Settings\..", if so, wait for next "
 		    nextIsTerminator = (c == ' ' || c == '\n' || c == '\t' || c == '\r' || c == ')') ? c : (char)0;
 		}
-		
+
 		if(expectFileName && (isLastChar || nextIsTerminator)) {
 			//KILE_DEBUG() << "Update the partial filename " << strPartialFileName << endl;
 			strPartialFileName =  strPartialFileName + strLine.substr(index, i-index + 1);
 			// we may continue for dirnames with spaces in it
 			index = i + 1;
-			
+
 			if(strPartialFileName.empty()){ // nothing left to do here
 			  continue;
 			}
@@ -330,7 +341,7 @@ void LatexOutputFilter::flushCurrentItem()
     //KILE_DEBUG() << "==LatexOutputFilter::flushCurrentItem()================" << endl;
     int nItemType = m_currentItem.type();
 
-    /* TODO why is this needed?? 
+    /* TODO why is this needed??
     while( m_stackFile.size() > 0 && !fileExists(m_stackFile.top().file()) ) {
 	m_stackFile.pop();
     }
@@ -356,7 +367,8 @@ void LatexOutputFilter::flushCurrentItem()
     }
 
     // print message
-    if ( !m_quiet || nItemType == itmError ) {
+    if ( nItemType == itmError || (nItemType == itmWarning && !m_quiet) || 
+	(nItemType == itmBadBox && !m_nobadboxes) ) {
 	cout << m_currentItem.getMessage();
     }
 
@@ -403,7 +415,7 @@ bool LatexOutputFilter::detectError(const string & strLine, short &dwCookie)
 			//KILE_DEBUG() << "\tError (cont'd): " << strLine << endl;
 			if(endsWith(strLine,'.')) {
 				dwCookie = LineNumber;
-				m_currentItem.addMessage(strLine);
+				m_currentItem.addMessage(strLine, needsSpace());
 			}
 			else if(GetCurrentOutputLine() - m_currentItem.outputLine() > 5) {
 				cerr << "\tBAILING OUT: error description spans more than five lines" << endl;
@@ -419,6 +431,8 @@ bool LatexOutputFilter::detectError(const string & strLine, short &dwCookie)
 				flush = true;
 				//KILE_DEBUG() << "\tline number: " << reLineNumber.getMatch(strLine,1) << endl;
 				m_currentItem.setSourceLine(parseInt(reLineNumber.getMatch(strLine,1)));
+				// TODO Does latex wrap around into a new line that starts with 'l.'? Assuming it 
+				//      does not (we always add a space).
 				m_currentItem.addMessage(reLineNumber.getMatch(strLine,2));
 			}
 			else if(GetCurrentOutputLine() - m_currentItem.outputLine() > 10) {
@@ -427,7 +441,7 @@ bool LatexOutputFilter::detectError(const string & strLine, short &dwCookie)
 				cerr << "\tBAILING OUT: did not detect a TeX line number for an error" << endl;
 				m_currentItem.setSourceLine(0);
 			} else {
-				m_currentItem.addMessage(strLine);
+				m_currentItem.addMessage(strLine, needsSpace());
 			}
 		break;
 
@@ -453,16 +467,16 @@ bool LatexOutputFilter::detectWarning(const string & strLine, short &dwCookie)
 // TODO: correctly match: (add package name to msg, remove '(<package>)      ' from following line
 // Package hyperref Warning: Option `pdfpagelabels' is turned off
 // (hyperref)                because \thepage is undefined.
-// 
+//
 // TODO match multiline, multiparagraph messages (?)
 
 	bool found = false, flush = false;
 	string warning;
 
-	static Regex reLaTeXWarning("^(! )?(LaTeX|pdfTeX|Package|Class) ((.*) )?Warning.*:(.*)", true);
+	static Regex reLaTeXWarning("^(! )?(LaTeX|pdfTeX|Package|Class) ((.*) )?Warning.*:(.*)$", true);
 	static Regex reNoFile("No file (.*)");
 	// FIXME can be removed when http://sourceforge.net/tracker/index.php?func=detail&aid=1772022&group_id=120000&atid=685683 has promoted to the users
-	static Regex reNoAsyFile("File .* does not exist."); 
+	static Regex reNoAsyFile("File .* does not exist.");
 
 	switch(dwCookie) {
 	    //detect the beginning of a warning
@@ -504,7 +518,7 @@ bool LatexOutputFilter::detectWarning(const string & strLine, short &dwCookie)
 	    //warning spans multiple lines, detect the end
 	    case Warning :
 		flush = detectLaTeXLineNumber(warning, dwCookie, strLine.length());
-		m_currentItem.addMessage(strLine);
+		m_currentItem.addMessage(strLine, needsSpace());
 		break;
 
 	    default:
@@ -523,7 +537,7 @@ bool LatexOutputFilter::detectWarning(const string & strLine, short &dwCookie)
 	return found;
 }
 
-bool LatexOutputFilter::detectLaTeXLineNumber(string & warning, short & dwCookie, int len)
+bool LatexOutputFilter::detectLaTeXLineNumber(string & warning, short & dwCookie, size_t len)
 {
 	//KILE_DEBUG() << "==LatexOutputFilter::detectLaTeXLineNumber(" << warning.length() << ")================" << endl;
 
@@ -536,7 +550,7 @@ bool LatexOutputFilter::detectLaTeXLineNumber(string & warning, short & dwCookie
 		warning = reLaTeXLineNumber.getMatch(warning,1);
 		dwCookie = Start;
 		return true;
-	} 
+	}
 	else if(reInternationalLaTeXLineNumber.match(warning)) {
 		//KILE_DEBUG() << "een" << endl;
 		m_currentItem.setSourceLine(parseInt(reInternationalLaTeXLineNumber.getMatch(warning,2)));
@@ -606,7 +620,7 @@ bool LatexOutputFilter::detectBadBox(const string & strLine, short & dwCookie)
 	return found;
 }
 
-bool LatexOutputFilter::detectBadBoxLineNumber(string & strLine, short & dwCookie, int len)
+bool LatexOutputFilter::detectBadBoxLineNumber(string & strLine, short & dwCookie, size_t len)
 {
 	//KILE_DEBUG() << "==LatexOutputFilter::detectBadBoxLineNumber(" << strLine.length() << ")================" << endl;
 
@@ -614,8 +628,8 @@ bool LatexOutputFilter::detectBadBoxLineNumber(string & strLine, short & dwCooki
 	static Regex reBadBoxLine("(.*) at line ([0-9]+)", true);
 	//Use the following only, if you know how to get the source line for it.
 	// This is not simple, as TeX is not reporting it.
-	static Regex reBadBoxOutput("(.*)has occurred while \\output is active^", true);
-	
+	static Regex reBadBoxOutput("(.*)has occurred while \\\\output is active^", true);
+
 	string match = strLine;
 
 	if(reBadBoxLines.match(strLine)) {
@@ -684,12 +698,15 @@ short LatexOutputFilter::parseLine(const string & strLine, short dwCookie)
 			break;
 	}
 
+	m_nLastLineLength = strLine.length();
+
 	return dwCookie;
 }
 
 bool LatexOutputFilter::run(FILE *out)
 {
 	m_nErrors = m_nWarnings = m_nBadBoxes = m_nParens = 0;
+	m_nLastLineLength = 0;
 	while (!m_stackFile.empty()) {
 	    m_stackFile.pop();
 	}

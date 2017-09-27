@@ -48,6 +48,7 @@ class ArgParser {
 	    help = false;
 	    version = false;
 	    quiet = false;
+	    nobadboxes = false;
 	    
 	    parseArguments();
 	}
@@ -87,6 +88,10 @@ class ArgParser {
 	bool isQuiet() {
 	    return quiet;
 	}
+
+	bool noBadBoxes() {
+	    return nobadboxes;
+	}
 	
     private:
 	int argc;
@@ -101,6 +106,7 @@ class ArgParser {
 	bool help;
 	bool version;
 	bool quiet;
+	bool nobadboxes;
 
 	void parseArguments() {
 
@@ -110,13 +116,16 @@ class ArgParser {
 	    int hasInteraction = 0;
 	    int inputopt = 0;
 	    int quietopt = 0;
+	    int bbopt = 0;
 
 	    string name(argv[0]);
 
 	    if ( name.compare(name.length()-7,7,"pplatex") == 0 ) {
 		program = "latex";
-	    } else {
+	    } else if ( name.compare(name.length()-9,9,"ppdflatex") == 0 ) {
 		program = "pdflatex";
+            } else {
+		program = "lualatex";
 	    }
 
 	    char** args = &argv[1];
@@ -147,6 +156,9 @@ class ArgParser {
 		else if ( !quietopt && (arg == "-q" || arg == "--quiet" ) ) {
 		    quietopt = i;
 		}
+		else if ( !quietopt && (arg == "-b" || arg == "--nobadboxes" ) ) {
+		    bbopt = i;
+		}
 	    }
 	    
 	    if (help || version) {
@@ -173,6 +185,9 @@ class ArgParser {
 
 	    if ( quietopt && quietopt < options ) {
 		quiet = true;
+	    }
+	    if ( bbopt && bbopt < options ) {
+		nobadboxes = true;
 	    }
 
 	    if ( inputopt && inputopt < options ) {
@@ -259,6 +274,7 @@ static void usage(char* program) {
     cout << "  pplatex options:" << endl;
     cout << "    -c, --cmd <cmd>    Execute <cmd> to compile the tex file" << endl;
     cout << "    -i, --input <file> Parse logfile <file> instead of executing latex ('-' for stdin)" << endl;
+    cout << "    -b                 Do not show badbox messages" << endl;
     cout << "    -q                 Do not show warnings and badbox messages" << endl;
     cout << "    -v                 Be verbosive" << endl;
     cout << "    -V, --version      Show version info" << endl;
@@ -347,7 +363,7 @@ int main(int argc, char** argv) {
 	}
     }
 
-    LatexOutputFilter of(parser.getSourcefile(), parser.getLogfile(), parser.isVerbose(), parser.isQuiet());
+    LatexOutputFilter of(parser.getSourcefile(), parser.getLogfile(), parser.isVerbose(), parser.noBadBoxes() || parser.isQuiet(), parser.isQuiet());
 
     of.run(fp);
 

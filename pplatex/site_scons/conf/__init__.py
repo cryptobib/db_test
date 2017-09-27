@@ -1,6 +1,9 @@
 import MSVCSetup
 import SDLSetup
 import CUDASetup
+import OpenGLSetup
 import DSetup
 import LatexSetup
-import OpenGLSetup
+import DiaSetup
+import GnuplotSetup
+import NotationSetup

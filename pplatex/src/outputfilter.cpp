@@ -19,9 +19,9 @@
 
 #include "outputfilter.h"
 
-#include <stdio.h>
 #include <string>
 #include <iostream>
+#include <cstdio>
 
 using namespace std;
 
@@ -32,8 +32,9 @@ static string trim(const string& str) {
     if ( start == string::npos ) {
 	return "";
     }
-    
-    size_t end   = str.find_last_not_of(" \t\n\r");
+   
+    // do not trim spaces at the end
+    size_t end   = str.find_last_not_of("\t\n\r");
 
     return str.substr( start, end-start+1 );
 }

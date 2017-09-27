@@ -28,7 +28,7 @@ Regex::Regex(const char* regex, bool caseinsensitive)
     if ( ret ) {
 	char err[1024];
 	regerror( ret, &rx, err, sizeof(err) );
-	cerr << "Error parsing regex " << regex << ", " << err << endl;		
+	cerr << "Error parsing regex " << regex << ", " << err << endl;
 	exit(3);
     }
 
@@ -58,9 +58,11 @@ bool Regex::match(const string& str)
 }
 
 string Regex::getMatch(const string& str, int i) {
-    if ( matches[i].rm_so == -1 ) {
-	return "";
-    }
-    return str.substr(matches[i].rm_so, matches[i].rm_eo - matches[i].rm_so);
+    if (matches == NULL)
+        return str;
+    else if ( matches[i].rm_so == -1 )
+        return "";
+    else
+        return str.substr(matches[i].rm_so, matches[i].rm_eo - matches[i].rm_so);
 }
 

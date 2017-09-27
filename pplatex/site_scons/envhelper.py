@@ -14,6 +14,13 @@ def FindToolPath(program, default=None):
 	return default
     return os.path.dirname(file)
 
+def FindTool(program, default=None):
+    """Get the path of a program binary from the OS environment."""
+    file=WhereIs(program)
+    if file is None:
+	return default
+    return file
+
 def GetOSEnv(name, default=None):
     """Get a variable from the OS environment."""
     try:

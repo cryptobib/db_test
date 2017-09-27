@@ -37,6 +37,13 @@ def InitVariables(argname='--conffile', option='config', release=False):
 
     return vars
 
+def CreateEnv(vars):
+    # TODO make optional, use config variables if set
+    env = {'PATH':os.environ['PATH']}
+    if platform.system().lower() == "windows":
+        env['TMP']  = os.environ['TMP']
+    return env
+
 def LoadReleaseFile(env, filename):
 
     rfile = file( filename, "rU" )

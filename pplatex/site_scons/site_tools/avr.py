@@ -4,7 +4,7 @@ Tool to add AVR-GCC compiler support and some builders to create output files.
 #
 # @project     SCons avr-gcc extension
 # @author      Stefan Hepp, stefan@stefant.org
-# @date        $Date: 2009-10-31 03:44:22 +0100 (Sam, 31 Okt 2009) $
+# @date        $Date: 2009-10-31 03:44:22 +0100 (Sat, 31 Oct 2009) $
 # @version     $Id: avr.py 109 2009-10-31 02:44:22Z stefan $
 #
 # TODO make this whole stuff more platform/compiler independent

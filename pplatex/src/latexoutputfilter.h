@@ -3,7 +3,7 @@
     copyright            : (C) 2003 by Jeroen Wijnhout (wijnhout@science.uva.nl)
 			       2009 by Stefan Hepp (stefan@stefant.org)
 
-    This file is taken from the Kile project and modified to work without Qt on 
+    This file is taken from the Kile project and modified to work without Qt on
     the cmdline by Stefan Hepp (stefan@stefant.org).
  ***********************************************************************************/
 
@@ -54,7 +54,7 @@ private:
 class LatexOutputFilter : public OutputFilter
 {
     public:
-        LatexOutputFilter(const std::string& source, const std::string& logfile, int verbose, bool quiet);
+        LatexOutputFilter(const std::string& source, const std::string& logfile, int verbose, bool nobadboxes, bool quiet);
         ~LatexOutputFilter();
 
         virtual bool run(FILE *out);
@@ -86,10 +86,15 @@ class LatexOutputFilter : public OutputFilter
 	bool detectError(const std::string & strLine, short &dwCookie);
 	bool detectWarning(const std::string & strLine, short &dwCookie);
 	bool detectBadBox(const std::string & strLine, short &dwCookie);
-	bool detectLaTeXLineNumber(std::string & warning, short & dwCookie, int len);
-	bool detectBadBoxLineNumber(std::string & strLine, short & dwCookie, int len);
+	bool detectLaTeXLineNumber(std::string & warning, short & dwCookie, size_t len);
+	bool detectBadBoxLineNumber(std::string & strLine, short & dwCookie, size_t len);
 
 	bool fileExists(const std::string & name);
+
+	/** 
+	Check if we need to add a space when we append a message to the last line 
+	 */
+	bool needsSpace();
 
         // types
     protected:
@@ -118,6 +123,10 @@ class LatexOutputFilter : public OutputFilter
 
 	int m_nParens;
 
+	/** Length of the previous line, to check if we need a space in the next line */
+	int m_nLastLineLength;
+
+	bool m_nobadboxes;
 	bool m_quiet;
 
         /**

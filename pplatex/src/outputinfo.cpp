@@ -81,7 +81,7 @@ LatexOutputInfo::LatexOutputInfo(const string& strSrcFile, int nSrcLine, int nOu
 {
 }
 
-void LatexOutputInfo::addMessage(const string& msg) 
+void LatexOutputInfo::addMessage(const string& msg, bool addSpace) 
 {
     if (msg.empty() || 
 	msg == "Type  H <return>  for immediate help." ||
@@ -94,10 +94,18 @@ void LatexOutputInfo::addMessage(const string& msg)
 
     Regex regLine(regex.c_str());
     
+    string line;
+
     if ( regLine.match(msg) ) {
-	m_strError = m_strError + "\n   " + regLine.getMatch(msg, 2);
+	line = regLine.getMatch(msg, 2);
     } else {
-	m_strError = m_strError + "\n   " + msg;
+	line = msg;
+    }
+
+    if (m_strError.length() + line.length() + (addSpace ? 1 : 0) < 80) {
+	m_strError = m_strError + (addSpace ? " " : "") + line;
+    } else {
+	m_strError = m_strError + "\n   " + line;
     }
 }
 
@@ -105,7 +113,6 @@ string LatexOutputInfo::getMessage()
 {
     ostringstream msg;
     bool hasType = true;
-    bool longMsg = false;
     
     switch (m_nErrorID) {
 	case itmError:   msg << "** Error  ";   break;
@@ -129,7 +136,6 @@ string LatexOutputInfo::getMessage()
 
     if (msg.str().length() + m_msgClass.length() + m_package.length() + m_strError.length() > 78 && !m_strError.empty() ) {
 	msg << endl << "   ";
-	longMsg = true;
     }
 
     if (!m_msgClass.empty() ) {
@@ -138,7 +144,6 @@ string LatexOutputInfo::getMessage()
 
     msg << m_strError << endl;
 
-    //if ( longMsg ) msg << endl;
     msg << endl;
 
     return msg.str();
