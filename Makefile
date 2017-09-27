@@ -4,7 +4,7 @@ BIBTEX=./bibtex8/bibtex
 BIBTEX_FLAGS=--csfile bibtex8/csf/cp850lat.csf --wolfgang
 PDFLATEX=./pplatex/bin/ppdflatex -q --
 
-TEX_TESTS=test_abbrev0_bibtex.tex test_abbrev0_biber.tex test_abbrev0_crossref_bibtex.tex test_abbrev0_crossref_biber.tex test_abbrev1_bibtex.tex test_abbrev1_biber.tex test_abbrev1_crossref_bibtex.tex test_abbrev1_crossref_biber.tex test_abbrev2_bibtex.tex test_abbrev2_biber.tex test_abbrev2_crossref_bibtex.tex test_abbrev2_crossref_biber.tex test_abbrev3_bibtex.tex test_abbrev3_biber.tex test_abbrev3_crossref_bibtex.tex test_abbrev3_crossref_biber.tex
+TEX_TESTS=test_abbrev0_bibtex.tex test_abbrev0_crossref_bibtex.tex test_abbrev1_bibtex.tex test_abbrev1_crossref_bibtex.tex test_abbrev2_bibtex.tex test_abbrev2_crossref_bibtex.tex test_abbrev3_bibtex.tex test_abbrev3_crossref_bibtex.tex test_abbrev0_biber.tex test_abbrev0_crossref_biber.tex test_abbrev1_biber.tex test_abbrev1_crossref_biber.tex test_abbrev2_biber.tex test_abbrev2_crossref_biber.tex test_abbrev3_biber.tex test_abbrev3_crossref_biber.tex
 PDF_TESTS=$(TEX_TESTS:.tex=.pdf)
 
 .PHONY: all clean mrproper FORCE
