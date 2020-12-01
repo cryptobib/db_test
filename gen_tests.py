@@ -3,6 +3,7 @@
 from string import Template
 
 test_template_bibtex = r"""\documentclass[a4paper,10pt]{article}
+\usepackage[T1]{fontenc}
 \usepackage{url}
 \usepackage{amscd,amsmath}
 \usepackage{amsfonts}
