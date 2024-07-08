@@ -1186,11 +1186,11 @@ void set_array_sizes (void)
         Hash_Size =     1L<<24;    // 35000;
         Max_Cites =     100000L;   // 7500;
         Max_Ent_Ints =  100000L;   // 7500;
-        Max_Ent_Strs =  300000L;   // 10000;
+        Max_Ent_Strs =  400000L;   // 10000;
         Max_Fields =    1L<<26;    // 125000L;
         Max_Strings =   1L<<23;    // 30000;
         Pool_Size =     1L<<28;    // 750000L;
-        Wiz_Fn_Space =  300000L;   // 10000;
+        Wiz_Fn_Space =  400000L;   // 10000;
     }
 
     if (M_cites > 0)
