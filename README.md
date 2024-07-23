@@ -14,11 +14,18 @@
 		cd bibtex8
 		make -f unix.mak linux-gcc
 
-- scons (can be installed via `pip install --egg scons`)
+- scons (can be installed via `python -m pip install scons`)
 - compile pplatex
 
 		cd pplatex
 		scons
+
+Note: If pplatex compilation fails with `src/regex.h:12:10: fatal error: 'pcreposix.h' file not found`, on macOS do:
+
+```
+brew install pcre
+scons PCREPATH="$(brew --prefix pcre)"
+```
 
 ### Run all tests
 

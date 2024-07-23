@@ -46,7 +46,7 @@ def CreateEnv(vars):
 
 def LoadReleaseFile(env, filename):
 
-    rfile = file( filename, "rU" )
+    rfile = open( filename, "rU" )
     for line in rfile:
         line = line.strip()
         if len(line) == 0:

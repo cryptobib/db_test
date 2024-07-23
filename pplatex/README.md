@@ -27,7 +27,10 @@ Result: o) Errors: 1, Warnings: 1, BadBoxes: 0
 ```
 
 The code is based on the LaTeX output parser of [Kile](http://kile.sourceforge.net/) (also used by TexMakerX),
-with some modifications and bugfixes.
+with some modifications and bugfixes. Be aware that since the log output of the
+LaTeX tools is not well defined (in any sense of the word), parsing is done by
+a heuristic that tries its best but still might fail in some cases (e.g., having
+very long directory names with spaces or special characters *might* cause issues).
 
 In contrast to [rubber](https://launchpad.net/rubber), pplatex does *not* run your latex tools multiple times 
 when references change or compile your images or the like. This remains the task
@@ -39,15 +42,11 @@ to compile LaTeX documents, images and lots of other stuff using SCons (see the
 Download
 ========
 
-Source packages can be found on this project's releases page on Github.
+Source packages and precompiled binaries can be found on this project's releases page on Github.
 
   https://github.com/stefanhepp/pplatex/releases
 
-Precompiled binaries are also available for Windows and Linux:
-
-- Linux (x64): [pplatex-1.0-rc2-linux-x64.tar.gz](https://dl.dropboxusercontent.com/u/12697903/pplatex/pplatex-1.0-rc2-linux.tar.gz)
-- Windows: [pplatex-1.0-rc2-win32.zip](https://dl.dropboxusercontent.com/u/12697903/pplatex/pplatex-1.0-rc2-win32.zip)
-
+For the Windows binaries to work, you will need to download and install the [Visual C++ Redistributable for Visual Studio 2015 (x86)](https://www.microsoft.com/en-us/download/details.aspx?id=48145) if you do not have it already.
 
 Quick Start
 ===========
@@ -62,13 +61,16 @@ If your latex tools are not in your PATH, use
 
     path/to/pplatex -c path/to/pdflatex -- myfile.tex
 
-You can also use pplatex to parse an existing log file.
+You can also use pplatex to parse an existing log file ...
 
     # run pdflatex normally
     pdflatex myfile.tex
     # Process the logfile and print warnings and errors.
     pplatex -i myfile.log
 
+... or to filter the output of pdflatex/xelatex/lualatex:
+
+    pdflatex myfile.tex | pplatex -i
 
 Building
 ========
@@ -97,6 +99,9 @@ You can build either with SCons or CMake.
 
 Building with SCons
 -------------------
+
+In order for the SCons build to work, you need to have LaTeX installed in your
+PATH or set LATEX\_PATH to your LaTeX installation path.
 
 If the pcre headers are not in a standard path (or if you are on Windows), 
 create a './config.py' or './config-windows.py' (p.e. by copying if from 
