@@ -1,4 +1,4 @@
-PYTHON=python2
+PYTHON=python3
 BIBER=biber
 BIBTEX=./bibtex8/bibtex
 BIBTEX_FLAGS=--csfile bibtex8/csf/cp850lat.csf --wolfgang
